@@ -1,27 +1,38 @@
+const express = require("express");
+const axios = require("axios");
+
+const app = express();
+
 const CLIENT_ID = process.env.CLIENT_ID;
 const CLIENT_SECRET = process.env.CLIENT_SECRET;
-
-const app = express
-
 const REDIRECT_URI = "https://careers-backend-dhpk.onrender.com/auth/linkedin/callback";
 
-// 👉 LOGIN
+app.get("/", (req, res) => {
+  res.send("API Lukintosh rodando 🚀");
+});
+
 app.get("/auth/linkedin", (req, res) => {
-  const url = `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=r_liteprofile%20r_emailaddress`;
+  const url =
+    "https://www.linkedin.com/oauth/v2/authorization" +
+    "?response_type=code" +
+    "&client_id=" + CLIENT_ID +
+    "&redirect_uri=" + encodeURIComponent(REDIRECT_URI) +
+    "&scope=openid%20profile%20email";
 
   res.redirect(url);
 });
 
-// 👉 CALLBACK
 app.get("/auth/linkedin/callback", async (req, res) => {
   const code = req.query.code;
 
   if (!code) {
-    return res.send("❌ Erro: código não recebido");
+    return res.status(400).send(`
+      <h1>Erro no login 😭</h1>
+      <pre>Parâmetro "code" não recebido.</pre>
+    `);
   }
 
   try {
-    // 🔑 TOKEN
     const tokenResponse = await axios.post(
       "https://www.linkedin.com/oauth/v2/accessToken",
       new URLSearchParams({
@@ -29,53 +40,47 @@ app.get("/auth/linkedin/callback", async (req, res) => {
         code: code,
         redirect_uri: REDIRECT_URI,
         client_id: CLIENT_ID,
-        client_secret: CLIENT_SECRET,
-      }),
+        client_secret: CLIENT_SECRET
+      }).toString(),
       {
         headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
+          "Content-Type": "application/x-www-form-urlencoded"
+        }
       }
     );
 
-    const access_token = tokenResponse.data.access_token;
+    const accessToken = tokenResponse.data.access_token;
 
-    // 👤 PERFIL
-    const profile = await axios.get(
-      "https://api.linkedin.com/v2/me",
+    const userInfoResponse = await axios.get(
+      "https://api.linkedin.com/v2/userinfo",
       {
         headers: {
-          Authorization: `Bearer ${access_token}`,
-        },
+          Authorization: `Bearer ${accessToken}`
+        }
       }
     );
 
-    // 📧 EMAIL
-    const email = await axios.get(
-      "https://api.linkedin.com/v2/emailAddress?q=members&projection=(elements*(handle~))",
-      {
-        headers: {
-          Authorization: `Bearer ${access_token}`,
-        },
-      }
-    );
+    const user = userInfoResponse.data;
 
     res.send(`
       <h1>Login OK 🚀</h1>
-      <p>Nome: ${profile.data.localizedFirstName}</p>
-      <p>Email: ${email.data.elements[0]["handle~"].emailAddress}</p>
+      <p><strong>Nome:</strong> ${user.name || "Não encontrado"}</p>
+      <p><strong>Email:</strong> ${user.email || "Não encontrado"}</p>
+      <p><strong>LinkedIn ID:</strong> ${user.sub || "Não encontrado"}</p>
+      <br>
+      <a href="https://be.at.lukintosh.com">Voltar pro site</a>
     `);
-
   } catch (err) {
     console.error("ERRO:", err.response?.data || err.message);
 
-    res.send(`
+    res.status(500).send(`
       <h1>Erro no login 😭</h1>
       <pre>${JSON.stringify(err.response?.data || err.message, null, 2)}</pre>
     `);
   }
 });
 
-app.listen(3000, () => {
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
   console.log("Servidor rodando 🚀");
 });
