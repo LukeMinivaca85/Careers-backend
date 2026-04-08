@@ -1,17 +1,18 @@
 const express = require("express");
 const axios = require("axios");
-require("dotenv").config();
 
 const app = express();
 
-const CLIENT_ID = process.env.CLIENT_ID;
-const CLIENT_SECRET = process.env.CLIENT_SECRET;
+// 🔑 COLOCA SEUS DADOS AQUI
+const CLIENT_ID = "SEU_CLIENT_ID_AQUI";
+const CLIENT_SECRET = "SEU_CLIENT_SECRET_AQUI";
+
 const REDIRECT_URI = "https://careers-backend-dhpk.onrender.com/auth/linkedin/callback";
 
-// 👉 ROTA DE LOGIN
+// 👉 LOGIN
 app.get("/auth/linkedin", (req, res) => {
   const url = `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=r_liteprofile%20r_emailaddress`;
-  
+
   res.redirect(url);
 });
 
@@ -24,7 +25,7 @@ app.get("/auth/linkedin/callback", async (req, res) => {
   }
 
   try {
-    // 🔑 trocar code por access_token
+    // 🔑 TOKEN
     const tokenResponse = await axios.post(
       "https://www.linkedin.com/oauth/v2/accessToken",
       new URLSearchParams({
@@ -43,7 +44,7 @@ app.get("/auth/linkedin/callback", async (req, res) => {
 
     const access_token = tokenResponse.data.access_token;
 
-    // 👤 pegar perfil
+    // 👤 PERFIL
     const profile = await axios.get(
       "https://api.linkedin.com/v2/me",
       {
@@ -53,7 +54,7 @@ app.get("/auth/linkedin/callback", async (req, res) => {
       }
     );
 
-    // 📧 pegar email
+    // 📧 EMAIL
     const email = await axios.get(
       "https://api.linkedin.com/v2/emailAddress?q=members&projection=(elements*(handle~))",
       {
