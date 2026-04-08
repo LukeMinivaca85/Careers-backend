@@ -63,10 +63,12 @@ app.get('/auth/linkedin/callback', async (req, res) => {
     `);
 
   } catch (err) {
-    console.error(err.response?.data || err.message);
-    res.send("Erro no login 😭");
-  }
-});
+  console.error("ERRO REAL:", err.response?.data || err.message);
 
-const PORT = process.env.PORT || 3000;
+  res.send(`
+    <h1>Erro no login 😭</h1>
+    <pre>${JSON.stringify(err.response?.data || err.message, null, 2)}</pre>
+  `);
+}
+cons PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log("Servidor rodando 🚀"));
