@@ -1,11 +1,7 @@
 const CLIENT_ID = process.env.CLIENT_ID;
 const CLIENT_SECRET = process.env.CLIENT_SECRET;
 
-const app = express();
-
-// 🔑 COLOCA SEUS DADOS AQUI
-const CLIENT_ID = "SEU_CLIENT_ID_AQUI";
-const CLIENT_SECRET = "SEU_CLIENT_SECRET_AQUI";
+const app = express
 
 const REDIRECT_URI = "https://careers-backend-dhpk.onrender.com/auth/linkedin/callback";
 
